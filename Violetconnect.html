@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VioletConnect Student Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ===== 1. Design tokens ===== */
+:root {
+  --bg-deep: #14002e;
+  --bg-mid: #2b0a63;
+  --violet: #8b5cf6;
+  --purple: #c026d3;
+  --lavender: #d9ccff;
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --danger: #ff9bb3;
+  --ok: #a7f3d0;
+  --grad: linear-gradient(135deg, var(--violet), var(--purple));
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  font-family: 'Poppins', system-ui, sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top left, var(--bg-mid), var(--bg-deep) 70%);
+  background-attachment: fixed;
+}
+
+a { color: var(--lavender); }
+h1 { font-size: 1.6rem; font-weight: 600; }
+h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 14px; }
+
+/* ===== 2. Glowing background lights ===== */
+.glow {
+  position: fixed; border-radius: 50%; filter: blur(90px);
+  opacity: 0.45; z-index: -1; animation: drift 14s ease-in-out infinite alternate;
+}
+.g1 { width: 380px; height: 380px; background: var(--violet); top: -80px; left: -80px; }
+.g2 { width: 320px; height: 320px; background: var(--purple); bottom: -60px; right: -40px; animation-delay: -5s; }
+.g3 { width: 220px; height: 220px; background: #6d28d9; top: 45%; left: 55%; animation-delay: -9s; }
+@keyframes drift { to { transform: translate(40px, 30px) scale(1.12); } }
+
+/* ===== 3. Glass surface ===== */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 12px 40px rgba(10, 0, 30, 0.35);
+}
+
+/* ===== 4. Views ===== */
+.view { display: none; }
+.view.active { display: grid; }
+.auth { min-height: 100vh; place-items: center; padding: 24px 16px; }
+
+.card { width: 100%; max-width: 420px; padding: 36px 32px; }
+.card.wide { max-width: 560px; }
+.logo { font-weight: 700; font-size: 1.35rem; letter-spacing: 0.01em; }
+.sub { color: var(--lavender); font-size: 0.85rem; margin: 2px 0 22px; }
+.card h1 { margin-bottom: 18px; }
+
+/* ===== 5. Forms ===== */
+label { display: block; font-size: 0.85rem; color: var(--lavender); margin-bottom: 14px; }
+input, select {
+  width: 100%; margin-top: 6px; padding: 12px 14px;
+  font: inherit; color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input::placeholder { color: rgba(217, 204, 255, 0.5); }
+input:focus, select:focus, button:focus-visible, a:focus-visible {
+  outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.45);
+}
+input[readonly] { opacity: 0.65; }
+option { color: #1a0b3b; }
+input.bad, select.bad { border-color: var(--danger); }
+.err { display: block; min-height: 0; color: var(--danger); font-size: 0.76rem; margin-top: 4px; }
+
+.pw { position: relative; }
+.pw input { padding-right: 70px; }
+.eye {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-38%);
+  background: none; border: 0; color: var(--lavender); font: inherit; font-size: 0.8rem; cursor: pointer; padding: 6px 8px;
+}
+
+.check { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; cursor: pointer; }
+.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--violet); }
+.check .err { flex-basis: 100%; }
+.row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.row .check { margin: 0; }
+.row a, .alt, .hint { font-size: 0.82rem; }
+.hint { color: var(--lavender); opacity: 0.8; margin: -6px 0 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+
+.msg { font-size: 0.85rem; border-radius: 12px; }
+.msg.error, .msg.success { padding: 10px 14px; margin-bottom: 14px; }
+.msg.error { background: rgba(255, 90, 130, 0.16); color: var(--danger); }
+.msg.success { background: rgba(52, 211, 153, 0.16); color: var(--ok); }
+.alt { text-align: center; margin-top: 18px; color: var(--lavender); }
+
+/* ===== 6. Buttons ===== */
+.btn {
+  position: relative; width: 100%; padding: 13px 20px;
+  font: inherit; font-weight: 600; color: #fff; cursor: pointer;
+  background: var(--grad); border: 0; border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(139, 92, 246, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(192, 38, 211, 0.45); }
+.btn:active { transform: translateY(0); }
+.btn.ghost { background: var(--glass); border: 1px solid var(--glass-border); box-shadow: none; }
+.btn:disabled { cursor: wait; opacity: 0.85; }
+.btn.loading span { opacity: 0; }
+.btn.loading::after {
+  content: ''; position: absolute; inset: 0; margin: auto; width: 20px; height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.35); border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 7. Toast ===== */
+.toast {
+  position: fixed; top: 18px; right: 18px; z-index: 50; max-width: 300px;
+  padding: 12px 18px; border-radius: 14px; font-size: 0.88rem;
+  background: rgba(40, 10, 90, 0.85); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px); opacity: 0; transform: translateY(-14px); pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ===== 8. Dashboard layout ===== */
+.dash { grid-template-columns: 250px 1fr; gap: 22px; padding: 22px; min-height: 100vh; }
+.side { padding: 26px 18px; position: sticky; top: 22px; height: calc(100vh - 44px); }
+.side .logo { padding: 0 10px 22px; }
+.side nav { display: flex; flex-direction: column; gap: 6px; }
+.side nav button {
+  display: flex; justify-content: space-between; align-items: center; text-align: left;
+  padding: 12px 14px; font: inherit; font-size: 0.92rem; color: var(--lavender);
+  background: none; border: 0; border-radius: 12px; cursor: pointer; transition: background 0.2s, color 0.2s;
+}
+.side nav button:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.side nav button.active { background: var(--grad); color: #fff; }
+.side nav .logout { margin-top: 18px; border: 1px solid var(--glass-border); }
+.badge { background: #fff; color: var(--purple); border-radius: 99px; font-size: 0.72rem; font-weight: 700; padding: 1px 8px; }
+.badge:empty { display: none; }
+
+.content { min-width: 0; }
+.section { display: none; }
+.section.active { display: block; }
+.page-title { margin-bottom: 18px; }
+.hero { padding: 28px; margin-bottom: 18px; }
+.hero p { color: var(--lavender); margin-top: 6px; font-size: 0.92rem; }
+.panel { padding: 22px; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 18px; }
+.stat { padding: 20px; }
+.stat b { display: block; font-size: 2rem; font-weight: 700; }
+.stat span { color: var(--lavender); font-size: 0.85rem; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.actions .btn { width: auto; }
+
+.cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; align-items: start; }
+.item { padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.item:last-child { border-bottom: 0; padding-bottom: 0; }
+.item:first-child { padding-top: 0; }
+.item b { display: block; font-weight: 500; font-size: 0.95rem; }
+.item span { display: block; color: var(--lavender); font-size: 0.82rem; margin-top: 2px; }
+.item.unread { border-left: 3px solid var(--purple); padding-left: 12px; }
+.item[data-ann] { cursor: pointer; }
+
+dl { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; font-size: 0.9rem; }
+dt { color: var(--lavender); }
+dd { margin: 0; overflow-wrap: anywhere; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 480px; }
+th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+th { color: var(--lavender); font-weight: 500; }
+
+/* ===== 9. Responsive ===== */
+@media (max-width: 960px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 800px) {
+  .dash { grid-template-columns: 1fr; padding: 14px; gap: 14px; }
+  .side { position: static; height: auto; padding: 18px 14px; }
+  .side nav { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+  .side nav button { white-space: nowrap; }
+  .side nav .logout { margin-top: 0; }
+  .cols { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .card { padding: 28px 20px; }
+  .grid2 { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .actions .btn { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Demo account box */
+.demo { padding: 14px; margin-bottom: 14px; border: 1px dashed var(--glass-border); border-radius: 14px; font-size: 0.82rem; }
+.demo b { display: block; margin-bottom: 4px; }
+.demo span { display: block; color: var(--lavender); }
+.demo .btn { margin-top: 10px; padding: 10px; }
+
+/* ===== Portrait layout: one narrow column, bottom navigation ===== */
+.view { width: 100%; max-width: 480px; margin: 0 auto; }
+.card, .card.wide { max-width: 440px; }
+.grid2 { grid-template-columns: 1fr; }
+
+.dash { grid-template-columns: 1fr; gap: 14px; padding: 14px 14px 96px; }
+.side {
+  position: fixed; top: auto; bottom: 10px; left: 50%; transform: translateX(-50%);
+  width: min(460px, calc(100% - 20px)); height: auto; padding: 8px; z-index: 20; border-radius: 20px;
+}
+.side .logo { display: none; }
+.side nav { flex-direction: row; gap: 4px; overflow-x: auto; padding: 0; }
+.side nav button { white-space: nowrap; padding: 10px 14px; font-size: 0.82rem; }
+.side nav .logout { margin: 0; }
+.stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+.cols { grid-template-columns: 1fr; }
+.hero { padding: 22px; }
+.actions .btn { flex: 1 1 100%; }
+
+</style>
+</head>
+<body>
+  <!-- Glowing background lights -->
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="glow g3"></div>
+
+  <!-- Pop-up message (toast) -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- ===== LOGIN VIEW ===== -->
+  <main id="loginView" class="view auth active">
+    <form id="loginForm" class="glass card" novalidate>
+      <div class="logo">VioletConnect</div>
+      <p class="sub">Student Portal</p>
+      <h1>Welcome back</h1>
+
+      <label>Email address
+        <input type="email" id="loginEmail" autocomplete="email" placeholder="you@school.edu">
+        <small class="err"></small>
+      </label>
+
+      <label>Password
+        <div class="pw">
+          <input type="password" id="loginPass" autocomplete="current-password" placeholder="Your password">
+          <button type="button" class="eye" data-target="loginPass">Show</button>
+        </div>
+        <small class="err"></small>
+      </label>
+
+      <div class="row">
+        <label class="check"><input type="checkbox" id="remember"> Remember me</label>
+        <a href="#" id="forgot">Forgot password?</a>
+      </div>
+
+      <div class="demo">
+        <b>Demo account</b>
+        <span>Email: student@violet.edu</span>
+        <span>Password: violet123</span>
+        <button type="button" id="useDemo" class="btn ghost"><span>Log in with demo account</span></button>
+      </div>
+
+      <div id="loginMsg" class="msg"></div>
+      <button class="btn" type="submit"><span>Log In</span></button>
+      <p class="alt">Don't have an account? <a href="#" data-go="registerView">Create Account</a></p>
+    </form>
+  </main>
+
+  <!-- ===== CREATE ACCOUNT VIEW ===== -->
+  <main id="registerView" class="view auth">
+    <form id="registerForm" class="glass card wide" novalidate>
+      <div class="logo">VioletConnect</div>
+      <p class="sub">Student Portal</p>
+      <h1>Create your account</h1>
+
+      <div class="grid2">
+        <label>Full name
+          <input type="text" id="regName" autocomplete="name" placeholder="Jordan Reyes">
+          <small class="err"></small>
+        </label>
+        <label>Student ID
+          <input type="text" id="regId" placeholder="2026-00123">
+          <small class="err"></small>
+        </label>
+      </div>
+
+      <label>Email address
+        <input type="email" id="regEmail" autocomplete="email" placeholder="you@school.edu">
+        <small class="err"></small>
+      </label>
+
+      <div class="grid2">
+        <label>Course or program
+          <select id="regCourse"></select>
+          <small class="err"></small>
+        </label>
+        <label>Year level
+          <select id="regYear"></select>
+          <small class="err"></small>
+        </label>
+      </div>
+
+      <div class="grid2">
+        <label>Password
+          <input type="password" id="regPass" autocomplete="new-password" placeholder="At least 8 characters">
+          <small class="err"></small>
+        </label>
+        <label>Confirm password
+          <input type="password" id="regConfirm" autocomplete="new-password" placeholder="Repeat password">
+          <small class="err"></small>
+        </label>
+      </div>
+
+      <label class="check"><input type="checkbox" data-target="regPass,regConfirm"> Show passwords</label>
+      <p class="hint">Demo project: use a made-up password, never a real one.</p>
+
+      <label class="check"><input type="checkbox" id="regTerms"> I agree to the Terms and Conditions
+        <small class="err"></small>
+      </label>
+
+      <div id="regMsg" class="msg"></div>
+      <button class="btn" type="submit"><span>Create Account</span></button>
+      <p class="alt">Already have an account? <a href="#" data-go="loginView">Log In</a></p>
+    </form>
+  </main>
+
+  <!-- ===== DASHBOARD VIEW ===== -->
+  <div id="dashView" class="view dash">
+    <aside class="glass side">
+      <div class="logo">VioletConnect</div>
+      <nav>
+        <button class="active" data-section="dashboard">Dashboard</button>
+        <button data-section="profile">My Profile</button>
+        <button data-section="details">My Details</button>
+        <button data-section="subjects">My Subjects</button>
+        <button data-section="grades">Grades</button>
+        <button data-section="schedule">Schedule</button>
+        <button data-section="announcements">Announcements <span id="navBadge" class="badge"></span></button>
+        <button id="logoutBtn" class="logout">Logout</button>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Dashboard home -->
+      <section id="sec-dashboard" class="section active">
+        <header class="glass hero">
+          <h1 id="welcome"></h1>
+          <p>Here is what is happening on campus today.</p>
+        </header>
+        <div id="stats" class="stats"></div>
+        <div class="actions">
+          <button class="btn" data-section="grades"><span>View Grades</span></button>
+          <button class="btn ghost" data-section="schedule"><span>View Schedule</span></button>
+          <button class="btn ghost" data-section="profile"><span>Edit Profile</span></button>
+        </div>
+        <div class="cols">
+          <div class="glass panel"><h2>My Subjects</h2><div id="dashSubjects"></div></div>
+          <div class="glass panel"><h2>Upcoming Schedule</h2><div id="dashSchedule"></div></div>
+          <div class="glass panel"><h2>Recent Announcements</h2><div id="dashAnn"></div></div>
+          <div class="glass panel"><h2>Profile</h2><dl id="dashProfile"></dl></div>
+        </div>
+      </section>
+
+      <!-- Profile -->
+      <section id="sec-profile" class="section">
+        <h1 class="page-title">My Profile</h1>
+        <form id="profileForm" class="glass panel" novalidate>
+          <div class="grid2">
+            <label>Full name <input type="text" id="pName"><small class="err"></small></label>
+            <label>Student ID <input type="text" id="pId" readonly></label>
+          </div>
+          <label>Email address <input type="email" id="pEmail" readonly></label>
+          <div class="grid2">
+            <label>Course or program <select id="pCourse"></select></label>
+            <label>Year level <select id="pYear"></select></label>
+          </div>
+          <button class="btn" type="submit"><span>Save changes</span></button>
+        </form>
+      </section>
+
+      <!-- Details -->
+      <section id="sec-details" class="section">
+        <h1 class="page-title">My Details</h1>
+        <div class="glass panel"><dl id="detailDl"></dl></div>
+      </section>
+
+      <!-- Subjects -->
+      <section id="sec-subjects" class="section">
+        <h1 class="page-title">My Subjects</h1>
+        <div id="subjectList" class="cols"></div>
+      </section>
+
+      <!-- Grades -->
+      <section id="sec-grades" class="section">
+        <h1 class="page-title">Grades</h1>
+        <div class="glass panel table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Subject</th><th>Units</th><th>Score</th><th>Grade</th></tr></thead>
+            <tbody id="gradeBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Schedule -->
+      <section id="sec-schedule" class="section">
+        <h1 class="page-title">Schedule</h1>
+        <div id="scheduleList" class="glass panel"></div>
+      </section>
+
+      <!-- Announcements -->
+      <section id="sec-announcements" class="section">
+        <h1 class="page-title">Announcements</h1>
+        <div class="actions"><button id="markAll" class="btn ghost" type="button"><span>Mark all as read</span></button></div>
+        <div id="annList" class="glass panel"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+/* =========================================================
+   VioletConnect Student Portal - script.js
+   Front-end learning project. Accounts live in localStorage.
+   DO NOT enter real passwords or sensitive student data.
+   ========================================================= */
+
+/* ---------- 1. Sample data (fictional) ---------- */
+const COURSES = ['BS Computer Science', 'BS Information Technology', 'BS Business Administration', 'BS Nursing', 'BS Engineering', 'BA Communication'];
+const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+
+const SUBJECTS = [
+  { code: 'CS101', name: 'Introduction to Programming', teacher: 'Prof. Elena Ruiz', units: 3, score: 94, grade: 'A', pts: 4.0 },
+  { code: 'MATH201', name: 'Discrete Mathematics', teacher: 'Dr. Marcus Chen', units: 3, score: 88, grade: 'B+', pts: 3.3 },
+  { code: 'ENG102', name: 'Technical Writing', teacher: 'Ms. Aisha Rahman', units: 2, score: 91, grade: 'A-', pts: 3.7 },
+  { code: 'PHY110', name: 'Physics for Computing', teacher: 'Dr. Tomas Silva', units: 3, score: 85, grade: 'B', pts: 3.0 },
+  { code: 'HUM105', name: 'Ethics in Technology', teacher: 'Prof. Naomi Clarke', units: 2, score: 96, grade: 'A', pts: 4.0 }
+];
+
+const SCHEDULE = [
+  { day: 'Mon', time: '8:00 - 9:30 AM', code: 'CS101', room: 'Room 204' },
+  { day: 'Mon', time: '1:00 - 2:30 PM', code: 'MATH201', room: 'Room 310' },
+  { day: 'Tue', time: '10:00 - 11:30 AM', code: 'ENG102', room: 'Room 112' },
+  { day: 'Wed', time: '9:00 - 10:30 AM', code: 'PHY110', room: 'Lab 2' },
+  { day: 'Thu', time: '2:00 - 3:30 PM', code: 'HUM105', room: 'Room 405' }
+];
+
+const ANNOUNCEMENTS = [
+  { id: 1, title: 'Library extended hours', text: 'The library stays open until 11 PM during midterm week.', date: 'Oct 28' },
+  { id: 2, title: 'Enrollment opens Nov 4', text: 'Check your advising hold before enrollment starts.', date: 'Oct 27' },
+  { id: 3, title: 'Campus career fair', text: 'Meet 40 employers at the Main Hall on Friday, 10 AM to 3 PM.', date: 'Oct 25' },
+  { id: 4, title: 'Wi-Fi maintenance', text: 'Campus Wi-Fi will be offline Sunday from 1 to 3 AM.', date: 'Oct 22' }
+];
+
+/* ---------- 2. Helpers ---------- */
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => document.querySelectorAll(selector);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERS_KEY = 'vc_users';
+const SESSION_KEY = 'vc_session';
+
+// Escape text before putting it into innerHTML (prevents HTML injection)
+function esc(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Safe storage: uses localStorage, or memory if the browser blocks it
+const mem = { local: {}, session: {} };
+function area(type) { return type === 'local' ? localStorage : sessionStorage; }
+function sGet(type, key) {
+  try { return area(type).getItem(key); } catch (error) { return mem[type][key] === undefined ? null : mem[type][key]; }
+}
+function sSet(type, key, value) {
+  try { area(type).setItem(key, value); } catch (error) { mem[type][key] = value; }
+}
+function sDel(type, key) {
+  try { area(type).removeItem(key); } catch (error) { /* blocked: ignore */ }
+  delete mem[type][key];
+}
+
+function getUsers() {
+  try { return JSON.parse(sGet('local', USERS_KEY)) || []; }
+  catch (error) { return []; }
+}
+function saveUsers(users) { sSet('local', USERS_KEY, JSON.stringify(users)); }
+function getSession() { return sGet('local', SESSION_KEY) || sGet('session', SESSION_KEY); }
+function currentUser() { return getUsers().find((u) => u.email === getSession()) || null; }
+
+// Read/unread announcements are saved per student
+function getRead(user) {
+  try { return JSON.parse(sGet('local', 'vc_read_' + user.email)) || []; }
+  catch (error) { return []; }
+}
+function saveRead(user, ids) { sSet('local', 'vc_read_' + user.email, JSON.stringify(ids)); }
+
+// Small pop-up message
+let toastTimer;
+function toast(text) {
+  const el = $('#toast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// Message box inside a form
+function setMsg(selector, text, type) {
+  const el = $(selector);
+  el.textContent = text;
+  el.className = 'msg ' + (text ? type : '');
+}
+
+// Show an error under an input
+function showErr(input, message) {
+  input.classList.add('bad');
+  input.closest('label').querySelector('.err').textContent = message;
+}
+function clearErrors(form) {
+  form.querySelectorAll('.err').forEach((e) => (e.textContent = ''));
+  form.querySelectorAll('.bad').forEach((i) => i.classList.remove('bad'));
+}
+
+// Button loading animation, then run the callback
+function withLoading(button, callback) {
+  button.classList.add('loading');
+  button.disabled = true;
+  setTimeout(() => {
+    button.classList.remove('loading');
+    button.disabled = false;
+    callback();
+  }, 700);
+}
+
+function fillSelect(selector, items, placeholder) {
+  const select = $(selector);
+  select.innerHTML = (placeholder ? '<option value="">' + placeholder + '</option>' : '') +
+    items.map((i) => '<option>' + i + '</option>').join('');
+}
+
+/* ---------- 3. Switching views and sections ---------- */
+function showView(id) {
+  $$('.view').forEach((v) => v.classList.remove('active'));
+  $('#' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showSection(name) {
+  $$('.section').forEach((s) => s.classList.remove('active'));
+  $('#sec-' + name).classList.add('active');
+  $$('.side nav [data-section]').forEach((b) => b.classList.toggle('active', b.dataset.section === name));
+  window.scrollTo(0, 0);
+}
+
+// Links like "Create Account" / "Log In"
+$$('[data-go]').forEach((link) => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    $$('form').forEach(clearErrors);
+    setMsg('#loginMsg', '', '');
+    setMsg('#regMsg', '', '');
+    showView(link.dataset.go);
+  });
+});
+
+// Sidebar and quick-action buttons
+$$('[data-section]').forEach((btn) => btn.addEventListener('click', () => showSection(btn.dataset.section)));
+
+/* ---------- 4. Show / hide password ---------- */
+$$('[data-target]').forEach((el) => {
+  el.addEventListener('click', () => {
+    const inputs = el.dataset.target.split(',').map((id) => document.getElementById(id));
+    const show = el.type === 'checkbox' ? el.checked : inputs[0].type === 'password';
+    inputs.forEach((input) => (input.type = show ? 'text' : 'password'));
+    if (el.tagName === 'BUTTON') el.textContent = show ? 'Hide' : 'Show';
+  });
+});
+
+$('#forgot').addEventListener('click', (e) => {
+  e.preventDefault();
+  toast('Password reset is not available in this demo.');
+});
+
+/* ---------- 5. Registration ---------- */
+$('#registerForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  clearErrors(form);
+  setMsg('#regMsg', '', '');
+
+  const name = $('#regName'), id = $('#regId'), email = $('#regEmail');
+  const course = $('#regCourse'), year = $('#regYear');
+  const pass = $('#regPass'), confirm = $('#regConfirm'), terms = $('#regTerms');
+  let ok = true;
+  const fail = (input, message) => { showErr(input, message); ok = false; };
+
+  if (name.value.trim().length < 2) fail(name, 'Enter your full name.');
+  if (!/^[A-Za-z0-9-]{4,}$/.test(id.value.trim())) fail(id, 'Use at least 4 letters, numbers or dashes.');
+  if (!email.value.trim()) fail(email, 'Enter your email address.');
+  else if (!EMAIL_RE.test(email.value.trim())) fail(email, 'Enter a valid email, like name@school.edu.');
+  if (!course.value) fail(course, 'Choose your course.');
+  if (!year.value) fail(year, 'Choose your year level.');
+  if (pass.value.length < 8) fail(pass, 'Use at least 8 characters.');
+  if (!confirm.value) fail(confirm, 'Repeat your password.');
+  else if (confirm.value !== pass.value) fail(confirm, 'Passwords do not match.');
+  if (!terms.checked) fail(terms, 'Accept the terms to continue.');
+  if (!ok) return;
+
+  withLoading(form.querySelector('.btn'), () => {
+    const users = getUsers();
+    const cleanEmail = email.value.trim().toLowerCase();
+    const cleanId = id.value.trim();
+
+    if (users.some((u) => u.email === cleanEmail)) {
+      showErr(email, 'This email is already registered. Log in instead.');
+      setMsg('#regMsg', 'Account not created. Fix the highlighted field.', 'error');
+      return;
+    }
+    if (users.some((u) => u.studentId.toLowerCase() === cleanId.toLowerCase())) {
+      showErr(id, 'This student ID is already registered.');
+      setMsg('#regMsg', 'Account not created. Fix the highlighted field.', 'error');
+      return;
+    }
+
+    // Demo only: the password is saved as plain text for this learning project
+    users.push({ name: name.value.trim(), studentId: cleanId, email: cleanEmail, course: course.value, year: year.value, password: pass.value });
+    saveUsers(users);
+    setMsg('#regMsg', 'Account created. Taking you to Log In...', 'success');
+
+    setTimeout(() => {
+      form.reset();
+      setMsg('#regMsg', '', '');
+      showView('loginView');
+      $('#loginEmail').value = cleanEmail;
+      $('#loginPass').focus();
+      toast('Account created. Log in to continue.');
+    }, 1100);
+  });
+});
+
+/* ---------- 6. Login ---------- */
+$('#loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  clearErrors(form);
+  setMsg('#loginMsg', '', '');
+
+  const email = $('#loginEmail'), pass = $('#loginPass');
+  let ok = true;
+  if (!email.value.trim()) { showErr(email, 'Enter your email address.'); ok = false; }
+  else if (!EMAIL_RE.test(email.value.trim())) { showErr(email, 'Enter a valid email, like name@school.edu.'); ok = false; }
+  if (!pass.value) { showErr(pass, 'Enter your password.'); ok = false; }
+  if (!ok) return;
+
+  withLoading(form.querySelector('.btn'), () => {
+    const user = getUsers().find((u) => u.email === email.value.trim().toLowerCase() && u.password === pass.value);
+    if (!user) {
+      setMsg('#loginMsg', 'Email or password is incorrect. Check both and try again.', 'error');
+      return;
+    }
+    // "Remember me" keeps the login after the browser closes
+    sDel('local', SESSION_KEY);
+    sDel('session', SESSION_KEY);
+    sSet(document.getElementById('remember').checked ? 'local' : 'session', SESSION_KEY, user.email);
+    form.reset();
+    openDashboard(user);
+    toast('Logged in successfully.');
+  });
+});
+
+/* ---------- 7. Dashboard ---------- */
+function openDashboard(user) {
+  // Guard: only show the dashboard when a real user is logged in
+  if (!user) { showView('loginView'); return; }
+  renderDashboard(user);
+  showSection('dashboard');
+  showView('dashView');
+}
+
+function renderDashboard(user) {
+  const read = getRead(user);
+  const unread = ANNOUNCEMENTS.filter((a) => !read.includes(a.id)).length;
+  const totalUnits = SUBJECTS.reduce((sum, s) => sum + s.units, 0);
+  const gpa = (SUBJECTS.reduce((sum, s) => sum + s.pts * s.units, 0) / totalUnits).toFixed(2);
+
+  $('#welcome').textContent = 'Welcome back, ' + user.name + '!';
+
+  const stats = [[SUBJECTS.length, 'Total Subjects'], [gpa, 'Current GPA'], [SCHEDULE.length, 'Upcoming Classes'], [unread, 'Unread Announcements']];
+  $('#stats').innerHTML = stats.map((s) => '<div class="glass stat"><b>' + s[0] + '</b><span>' + s[1] + '</span></div>').join('');
+
+  const subjectItem = (s) => '<div class="item"><b>' + s.name + '</b><span>' + s.code + ' with ' + s.teacher + '</span></div>';
+  const scheduleItem = (c) => {
+    const subject = SUBJECTS.find((s) => s.code === c.code);
+    return '<div class="item"><b>' + subject.name + '</b><span>' + c.day + ', ' + c.time + ' in ' + c.room + '</span></div>';
+  };
+  const annItem = (a, clickable) => '<div class="item' + (read.includes(a.id) ? '' : ' unread') + '"' + (clickable ? ' data-ann="' + a.id + '"' : '') +
+    '><b>' + a.title + '</b><span>' + a.text + ' (' + a.date + ')</span></div>';
+
+  $('#dashSubjects').innerHTML = SUBJECTS.slice(0, 3).map(subjectItem).join('');
+  $('#dashSchedule').innerHTML = SCHEDULE.slice(0, 3).map(scheduleItem).join('');
+  $('#dashAnn').innerHTML = ANNOUNCEMENTS.slice(0, 3).map((a) => annItem(a, false)).join('');
+
+  $('#dashProfile').innerHTML = [['Name', user.name], ['Student ID', user.studentId], ['Email', user.email], ['Course', user.course], ['Year level', user.year]]
+    .map((r) => '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>').join('');
+
+  $('#subjectList').innerHTML = SUBJECTS.map((s) => '<div class="glass panel">' + subjectItem(s) + '<div class="item"><span>' + s.units + ' units</span></div></div>').join('');
+  $('#gradeBody').innerHTML = SUBJECTS.map((s) => '<tr><td>' + s.code + '</td><td>' + s.name + '</td><td>' + s.units + '</td><td>' + s.score + '</td><td>' + s.grade + '</td></tr>').join('');
+  $('#scheduleList').innerHTML = SCHEDULE.map(scheduleItem).join('');
+  $('#annList').innerHTML = ANNOUNCEMENTS.map((a) => annItem(a, true)).join('');
+  $('#navBadge').textContent = unread || '';
+
+  // Full student details
+  const details = [['Full name', user.name], ['Student ID', user.studentId], ['Email', user.email], ['Course', user.course], ['Year level', user.year],
+    ['Status', 'Enrolled'], ['Term', '1st Semester, 2026-2027'], ['Adviser', 'Dr. Marcus Chen'], ['Campus', 'Main Campus'],
+    ['Units enrolled', totalUnits], ['Current GPA', gpa]];
+  $('#detailDl').innerHTML = details.map((r) => '<dt>' + r[0] + '</dt><dd>' + esc(String(r[1])) + '</dd>').join('');
+
+  // Fill the profile form
+  $('#pName').value = user.name;
+  $('#pId').value = user.studentId;
+  $('#pEmail').value = user.email;
+  $('#pCourse').value = user.course;
+  $('#pYear').value = user.year;
+}
+
+// Click an announcement to mark it read / unread
+$('#annList').addEventListener('click', (e) => {
+  const item = e.target.closest('[data-ann]');
+  const user = currentUser();
+  if (!item || !user) return;
+  const id = Number(item.dataset.ann);
+  const read = getRead(user);
+  saveRead(user, read.includes(id) ? read.filter((r) => r !== id) : read.concat(id));
+  renderDashboard(user);
+});
+
+$('#markAll').addEventListener('click', () => {
+  const user = currentUser();
+  if (!user) return;
+  saveRead(user, ANNOUNCEMENTS.map((a) => a.id));
+  renderDashboard(user);
+  toast('All announcements marked as read.');
+});
+
+// Edit profile
+$('#profileForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  clearErrors(e.target);
+  const nameInput = $('#pName');
+  if (nameInput.value.trim().length < 2) { showErr(nameInput, 'Enter your full name.'); return; }
+
+  const users = getUsers();
+  const user = users.find((u) => u.email === getSession());
+  if (!user) return;
+  user.name = nameInput.value.trim();
+  user.course = $('#pCourse').value;
+  user.year = $('#pYear').value;
+  saveUsers(users);
+  renderDashboard(user);
+  toast('Profile saved.');
+});
+
+/* ---------- 8. Logout ---------- */
+$('#logoutBtn').addEventListener('click', () => {
+  sDel('local', SESSION_KEY);
+  sDel('session', SESSION_KEY);
+  showView('loginView');
+  toast('You have been logged out.');
+});
+
+/* ---------- 8b. Make buttons work everywhere ---------- */
+// Some preview windows block real form submission, so the main button
+// and the Enter key trigger the same handler directly instead.
+$$('form').forEach((form) => {
+  const fire = () => form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  const mainBtn = form.querySelector('.btn:not(.ghost)');
+  mainBtn.type = 'button';
+  mainBtn.addEventListener('click', fire);
+  form.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') {
+      e.preventDefault();
+      fire();
+    }
+  });
+});
+
+/* ---------- 9. Start the app ---------- */
+fillSelect('#regCourse', COURSES, 'Select course');
+fillSelect('#regYear', YEARS, 'Select year');
+fillSelect('#pCourse', COURSES);
+fillSelect('#pYear', YEARS);
+
+// Demo account so you can log in right away
+const users = getUsers();
+if (!users.some((u) => u.email === 'student@violet.edu')) {
+  users.push({ name: 'Alex Morgan', studentId: '2026-00001', email: 'student@violet.edu', course: 'BS Computer Science', year: '2nd Year', password: 'violet123' });
+  saveUsers(users);
+}
+$('#useDemo').addEventListener('click', () => {
+  $('#loginEmail').value = 'student@violet.edu';
+  $('#loginPass').value = 'violet123';
+  $('#loginForm .btn:not(.ghost)').click();
+});
+
+// If someone is already logged in, go straight to the dashboard; otherwise stay on login
+const startUser = currentUser();
+if (startUser) openDashboard(startUser);
+else showView('loginView');
+
+</script>
+</body>
+</html>

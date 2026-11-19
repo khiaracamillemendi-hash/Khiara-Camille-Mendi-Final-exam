@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VioletConnect Student Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Glowing background lights -->
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="glow g3"></div>
+
+  <!-- Pop-up message (toast) -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- ===== LOGIN VIEW ===== -->
+  <main id="loginView" class="view auth active">
+    <form id="loginForm" class="glass card" novalidate>
+      <div class="logo">VioletConnect</div>
+      <p class="sub">Student Portal</p>
+      <h1>Welcome back</h1>
+
+      <label>Email address
+        <input type="email" id="loginEmail" autocomplete="email" placeholder="you@school.edu">
+        <small class="err"></small>
+      </label>
+
+      <label>Password
+        <div class="pw">
+          <input type="password" id="loginPass" autocomplete="current-password" placeholder="Your password">
+          <button type="button" class="eye" data-target="loginPass">Show</button>
+        </div>
+        <small class="err"></small>
+      </label>
+
+      <div class="row">
+        <label class="check"><input type="checkbox" id="remember"> Remember me</label>
+        <a href="#" id="forgot">Forgot password?</a>
+      </div>
+
+      <div class="demo">
+        <b>Demo account</b>
+        <span>Email: student@violet.edu</span>
+        <span>Password: violet123</span>
+        <button type="button" id="useDemo" class="btn ghost"><span>Log in with demo account</span></button>
+      </div>
+
+      <div id="loginMsg" class="msg"></div>
+      <button class="btn" type="submit"><span>Log In</span></button>
+      <p class="alt">Don't have an account? <a href="#" data-go="registerView">Create Account</a></p>
+    </form>
+  </main>
+
+  <!-- ===== CREATE ACCOUNT VIEW ===== -->
+  <main id="registerView" class="view auth">
+    <form id="registerForm" class="glass card wide" novalidate>
+      <div class="logo">VioletConnect</div>
+      <p class="sub">Student Portal</p>
+      <h1>Create your account</h1>
+
+      <div class="grid2">
+        <label>Full name
+          <input type="text" id="regName" autocomplete="name" placeholder="Jordan Reyes">
+          <small class="err"></small>
+        </label>
+        <label>Student ID
+          <input type="text" id="regId" placeholder="2026-00123">
+          <small class="err"></small>
+        </label>
+      </div>
+
+      <label>Email address
+        <input type="email" id="regEmail" autocomplete="email" placeholder="you@school.edu">
+        <small class="err"></small>
+      </label>
+
+      <div class="grid2">
+        <label>Course or program
+          <select id="regCourse"></select>
+          <small class="err"></small>
+        </label>
+        <label>Year level
+          <select id="regYear"></select>
+          <small class="err"></small>
+        </label>
+      </div>
+
+      <div class="grid2">
+        <label>Password
+          <input type="password" id="regPass" autocomplete="new-password" placeholder="At least 8 characters">
+          <small class="err"></small>
+        </label>
+        <label>Confirm password
+          <input type="password" id="regConfirm" autocomplete="new-password" placeholder="Repeat password">
+          <small class="err"></small>
+        </label>
+      </div>
+
+      <label class="check"><input type="checkbox" data-target="regPass,regConfirm"> Show passwords</label>
+      <p class="hint">Demo project: use a made-up password, never a real one.</p>
+
+      <label class="check"><input type="checkbox" id="regTerms"> I agree to the Terms and Conditions
+        <small class="err"></small>
+      </label>
+
+      <div id="regMsg" class="msg"></div>
+      <button class="btn" type="submit"><span>Create Account</span></button>
+      <p class="alt">Already have an account? <a href="#" data-go="loginView">Log In</a></p>
+    </form>
+  </main>
+
+  <!-- ===== DASHBOARD VIEW ===== -->
+  <div id="dashView" class="view dash">
+    <aside class="glass side">
+      <div class="logo">VioletConnect</div>
+      <nav>
+        <button class="active" data-section="dashboard">Dashboard</button>
+        <button data-section="profile">My Profile</button>
+        <button data-section="details">My Details</button>
+        <button data-section="subjects">My Subjects</button>
+        <button data-section="grades">Grades</button>
+        <button data-section="schedule">Schedule</button>
+        <button data-section="announcements">Announcements <span id="navBadge" class="badge"></span></button>
+        <button id="logoutBtn" class="logout">Logout</button>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Dashboard home -->
+      <section id="sec-dashboard" class="section active">
+        <header class="glass hero">
+          <h1 id="welcome"></h1>
+          <p>Here is what is happening on campus today.</p>
+        </header>
+        <div id="stats" class="stats"></div>
+        <div class="actions">
+          <button class="btn" data-section="grades"><span>View Grades</span></button>
+          <button class="btn ghost" data-section="schedule"><span>View Schedule</span></button>
+          <button class="btn ghost" data-section="profile"><span>Edit Profile</span></button>
+        </div>
+        <div class="cols">
+          <div class="glass panel"><h2>My Subjects</h2><div id="dashSubjects"></div></div>
+          <div class="glass panel"><h2>Upcoming Schedule</h2><div id="dashSchedule"></div></div>
+          <div class="glass panel"><h2>Recent Announcements</h2><div id="dashAnn"></div></div>
+          <div class="glass panel"><h2>Profile</h2><dl id="dashProfile"></dl></div>
+        </div>
+      </section>
+
+      <!-- Profile -->
+      <section id="sec-profile" class="section">
+        <h1 class="page-title">My Profile</h1>
+        <form id="profileForm" class="glass panel" novalidate>
+          <div class="grid2">
+            <label>Full name <input type="text" id="pName"><small class="err"></small></label>
+            <label>Student ID <input type="text" id="pId" readonly></label>
+          </div>
+          <label>Email address <input type="email" id="pEmail" readonly></label>
+          <div class="grid2">
+            <label>Course or program <select id="pCourse"></select></label>
+            <label>Year level <select id="pYear"></select></label>
+          </div>
+          <button class="btn" type="submit"><span>Save changes</span></button>
+        </form>
+      </section>
+
+      <!-- Details -->
+      <section id="sec-details" class="section">
+        <h1 class="page-title">My Details</h1>
+        <div class="glass panel"><dl id="detailDl"></dl></div>
+      </section>
+
+      <!-- Subjects -->
+      <section id="sec-subjects" class="section">
+        <h1 class="page-title">My Subjects</h1>
+        <div id="subjectList" class="cols"></div>
+      </section>
+
+      <!-- Grades -->
+      <section id="sec-grades" class="section">
+        <h1 class="page-title">Grades</h1>
+        <div class="glass panel table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Subject</th><th>Units</th><th>Score</th><th>Grade</th></tr></thead>
+            <tbody id="gradeBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Schedule -->
+      <section id="sec-schedule" class="section">
+        <h1 class="page-title">Schedule</h1>
+        <div id="scheduleList" class="glass panel"></div>
+      </section>
+
+      <!-- Announcements -->
+      <section id="sec-announcements" class="section">
+        <h1 class="page-title">Announcements</h1>
+        <div class="actions"><button id="markAll" class="btn ghost" type="button"><span>Mark all as read</span></button></div>
+        <div id="annList" class="glass panel"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
